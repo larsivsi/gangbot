@@ -541,7 +541,7 @@ class IRC
     # Get weather data
     when /^!weather(.*)$/i
       temp = $1.strip
-      is_number = not temp.gsub(%r{\D+},"").empty?
+      is_number = !temp.gsub(%r{\D+},"").empty?
       number = temp.gsub(%r{\D+},"").to_i
       time = Time.new
       if is_number and (1..8).include?(number) 
