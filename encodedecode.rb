@@ -1,4 +1,4 @@
-def fixIllegal(num,bool)
+def fix_illegal(num, bool)
   if bool
     if num>=127 and num<=160
       return 734+(num-127)
@@ -14,13 +14,13 @@ def fixIllegal(num,bool)
   end
 end
 
-def makeReal(num)
+def make_real(num)
   if num>=33 and num<=733
     return num
   elsif num < 33
-    return makeReal(733-(32-num))
+    return make_real(733-(32-num))
   else
-    return makeReal(num-701)
+    return make_real(num-701)
   end
 end
 
@@ -30,24 +30,24 @@ def encode(s)
   retstring = ""
 
   dir = rand(2)
-  num = fixIllegal(makeReal(33+rand(400)),true)
-  num2 = fixIllegal(makeReal(33+rand(400)),true)
+  num = fix_illegal(make_real(33+rand(400)),true)
+  num2 = fix_illegal(make_real(33+rand(400)),true)
 
   for i in 0..a.length-1
     if a[i] == 32
-      ws << [fixIllegal((i-ws.length+33),true)].pack('U').to_s
+      ws << [fix_illegal((i-ws.length+33),true)].pack('U').to_s
     else
       if dir == 0
-        retstring << [fixIllegal(makeReal(a[i]-num),true)].pack('U').to_s
+        retstring << [fix_illegal(make_real(a[i]-num),true)].pack('U').to_s
       else
-        retstring << [fixIllegal(makeReal(a[i]+num),true)].pack('U').to_s
+        retstring << [fix_illegal(make_real(a[i]+num),true)].pack('U').to_s
       end
     end
   end
 
   retstring << " "
   retstring << ws.to_s
-  retstring << [fixIllegal(makeReal((dir+num-num2)),true)].pack('U').to_s
+  retstring << [fix_illegal(make_real((dir+num-num2)),true)].pack('U').to_s
   retstring << [num].pack('U').to_s
   retstring << [num2].pack('U').to_s
 
@@ -61,11 +61,11 @@ def decode(s)
   
   num2 = ws.pop
   num = ws.pop
-  dir = makeReal(fixIllegal(ws.pop,false)-num+num2)-701
+  dir = make_real(fix_illegal(ws.pop,false)-num+num2)-701
   retstring = ""
 
   for i in 0..ws.length-1
-    ws[i] = fixIllegal(ws[i],false)-33
+    ws[i] = fix_illegal(ws[i],false)-33
   end
 
   for i in 0..a.length-1
@@ -73,9 +73,9 @@ def decode(s)
       retstring << " "
     end
     if dir == 0
-      retstring << [makeReal(fixIllegal(a[i],false)+num)].pack('U').to_s
+      retstring << [make_real(fix_illegal(a[i],false)+num)].pack('U').to_s
     else
-      retstring << [makeReal(fixIllegal(a[i],false)-num)].pack('U').to_s
+      retstring << [make_real(fix_illegal(a[i],false)-num)].pack('U').to_s
     end
   end
 
