@@ -1,3 +1,4 @@
+# Move illegal chars (127-160) into reserved area (734-767)
 def fix_illegal(num, bool)
   if bool
     if num>=127 and num<=160
@@ -14,6 +15,7 @@ def fix_illegal(num, bool)
   end
 end
 
+# Make number fall within [33,733] (734-767 reserved for illegal characters).
 def make_real(num)
   if num>=33 and num<=733
     return num
@@ -24,69 +26,81 @@ def make_real(num)
   end
 end
 
-def encode(s)
-  a = s.unpack('U'*s.length)
-  ws = []
-  retstring = ""
+# Basically a caesar cipher
+def encode_substitution_cipher(input)
+  plaintext = input.unpack('U'*input.length)
+  key = []
+  output = ""
 
-  dir = rand(2)
+  # direction of caesar
+  direction = rand(2)
+  # number of caesar shifts
   num = fix_illegal(make_real(33+rand(400)),true)
+  # obscurification number
   num2 = fix_illegal(make_real(33+rand(400)),true)
 
-  for i in 0..a.length-1
-    if a[i] == 32
-      ws << [fix_illegal((i-ws.length+33),true)].pack('U').to_s
+  for i in 0..plaintext.length-1
+    # remove spaces
+    if plaintext[i] == 32
+      key << [fix_illegal((i-key.length+33),true)].pack('U').to_s
     else
-      if dir == 0
-        retstring << [fix_illegal(make_real(a[i]-num),true)].pack('U').to_s
+      # forward caesar
+      if direction
+        output << [fix_illegal(make_real(plaintext[i]+num),true)].pack('U').to_s
+      # backward caesar
       else
-        retstring << [fix_illegal(make_real(a[i]+num),true)].pack('U').to_s
+        output << [fix_illegal(make_real(plaintext[i]-num),true)].pack('U').to_s
       end
     end
   end
 
-  retstring << " "
-  retstring << ws.to_s
-  retstring << [fix_illegal(make_real((dir+num-num2)),true)].pack('U').to_s
-  retstring << [num].pack('U').to_s
-  retstring << [num2].pack('U').to_s
+  output << " "
+  output << key.to_s
+  # obscurify direction
+  output << [fix_illegal(make_real((direction+num-num2)),true)].pack('U').to_s
+  output << [num].pack('U').to_s
+  output << [num2].pack('U').to_s
 
-  return retstring
+  return output
 end
 
-def decode(s)
-  s = s.split(" ")
-  a = s[0].unpack('U'*s[0].length)
-  ws = s[1].unpack('U'*s[1].length)
+def decode_substitution_cipher(input)
+  input = input.split(" ")
+  ciphertext = input[0].unpack('U'*input[0].length)
+  key = input[1].unpack('U'*input[1].length)
   
-  num2 = ws.pop
-  num = ws.pop
-  dir = make_real(fix_illegal(ws.pop,false)-num+num2)-701
-  retstring = ""
+  # obscurification number
+  num2 = key.pop
+  # caesar shift number
+  num = key.pop
+  # shift direction
+  direction = make_real(fix_illegal(key.pop,false)-num+num2)-701
+  output = ""
 
-  for i in 0..ws.length-1
-    ws[i] = fix_illegal(ws[i],false)-33
+  for i in 0..key.length-1
+    key[i] = fix_illegal(key[i],false)-33
   end
 
-  for i in 0..a.length-1
-    if ws.include?(i)
-      retstring << " "
+  for i in 0..ciphertext.length-1
+    # add spaces
+    if key.include?(i)
+      output << " "
     end
-    if dir == 0
-      retstring << [make_real(fix_illegal(a[i],false)+num)].pack('U').to_s
+    if direction
+      output << [make_real(fix_illegal(ciphertext[i],false)-num)].pack('U').to_s
     else
-      retstring << [make_real(fix_illegal(a[i],false)-num)].pack('U').to_s
+      output << [make_real(fix_illegal(ciphertext[i],false)+num)].pack('U').to_s
     end
   end
 
-  return retstring
+  return output
 end
 
 args = ARGV
 if args.length != 2
   STDOUT.puts "too many/too few args"
 elsif args[0] == '0'
-  STDOUT.puts encode(args[1])
+  STDOUT.puts encode_substitution_cipher(args[1])
 else
-  STDOUT.puts decode(args[1])
+  STDOUT.puts decode_substitution_cipher(args[1])
 end
