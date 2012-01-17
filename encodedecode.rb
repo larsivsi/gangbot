@@ -95,3 +95,122 @@ def decode_substitution_cipher(input)
 
   return output
 end
+
+def encode_row_transposition_cipher(input)
+  plaintext = input.unpack('U'*input.length)
+  output = ""
+
+  # create 2d array
+  columns = Math.sqrt(input.length).ceil
+  array = []
+  columns.times { array << Array.new(columns) }
+
+  # fill array
+  for i in 0..input.length-1
+    array[(i/columns).to_i][i%columns] = plaintext[i]
+  end
+
+  use_break_char = 0
+  break_char = 0
+
+  # if we have to pad the array
+  if input.length != columns*columns
+    use_break_char = 1
+
+    # find break character that's not illegal
+    begin
+      break_char = 33+rand(710)
+    end while plaintext.include?(break_char) or (127..160).cover?(break_char)
+
+    array[(input.length/columns).to_i][input.length%columns] = break_char
+
+    # fill the rest of the array with garbage
+    for i in input.length+1..columns*columns-1
+      begin
+        rand_char = 33+rand(710)
+      end while (127..160).cover?(rand_char)
+      array[(i/columns).to_i][i%columns] = rand_char
+    end
+  end
+
+  # create the shuffle key
+  shuffle = Array.new(columns) { |i| i }.shuffle
+
+  for i in shuffle
+    for j in 0..columns-1
+      output << [array[j][i]].pack('U').to_s
+    end
+  end
+
+  shuffle_obsc = 200 + rand(300)
+
+  output << " "
+  shuffle.each { |num|
+    num += shuffle_obsc
+    output << [num].pack('U').to_s
+  }
+  output << [columns + shuffle_obsc].pack('U').to_s
+  if use_break_char
+    output << [break_char].pack('U').to_s
+  end
+  output << [use_break_char + shuffle_obsc].pack('U').to_s
+  output << [shuffle_obsc].pack('U').to_s
+
+  return output
+end
+
+def decode_row_transposition_cipher(input)
+  input = input.split(" ")
+  ciphertext = input[0].unpack('U'*input[0].length)
+  ciphertext << 32 
+  ciphertext += input[1].unpack('U'*input[1].length)
+  key = input[2].unpack('U'*input[2].length)
+  output = ""
+
+  # get key information
+  shuffle_obsc = key.pop
+  use_break_char = key.pop - shuffle_obsc
+  break_char = 0
+  if use_break_char
+    break_char = key.pop
+  end
+  columns = key.pop - shuffle_obsc
+
+  # get the shuffle array
+  shuffle = []
+  for num in key
+    shuffle << num - shuffle_obsc
+  end
+
+  # make 2d array
+  array = []
+  columns.times { array << Array.new(columns) }
+
+  for i in 0..columns-1
+    for j in 0..columns-1
+      array[j][shuffle[i]] = ciphertext[i*columns+j]
+    end
+  end
+
+  for i in 0..columns*columns
+    num = array[(i/columns).to_i][i%columns]
+    if num == break_char
+      break
+    end
+    output << [num].pack('U').to_s
+  end
+
+  return output
+end
+
+# for testing
+#testtext = "hei hopp, dette er en fin og lang testtext!! hurra for meh!"
+#puts testtext
+#enc_sub = encode_substitution_cipher(testtext)
+#puts enc_sub
+#enc = encode_row_transposition_cipher(enc_sub)
+#puts enc
+#dec_row = decode_row_transposition_cipher(enc)
+#puts dec_row
+#dec = decode_substitution_cipher(dec_row)
+#puts dec
