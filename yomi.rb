@@ -1,10 +1,17 @@
 #!/usr/bin/ruby
 
 # Use local config if it exists
-if File::exists?('gangbot.config.local.rb')
-	require 'gangbot.config.local'
+if File::exists?('./gangbot.config.local.rb')
+  require './gangbot.config.local'
 else
-	require 'gangbot.config'
+  require './gangbot.config'
+end
+# Check for encode/decode
+if File::exists?('./encodedecode.rb')
+  require './encodedecode.rb'
+  ENCODEDECODE = true
+else
+  ENCODEDECODE = false
 end
 require 'socket'
 
@@ -34,15 +41,6 @@ class IRC
     send "USER #{@nick} gangbot pt2 :#{@nick}"
     send "NICK #{@nick}"
     send "JOIN #{@channel}"
-  end
-
-  # Security by obscurity
-  def encodedecode(message, param)
-    message = "'#{message}'"
-    inout = IO.popen("ruby encodedecode.rb #{param} #{message}")
-    answer = inout.readlines.to_s
-    inout.close
-    return answer
   end
 
   # Start a timer in a new thread. Used for !notify
@@ -156,20 +154,28 @@ class IRC
     # Decode message
     when /^!decode(.*)$/i
       message = $1.strip
-      if message.length != 0
-        decoded = encodedecode(message,1)
-        send "#{return_str}:#{decoded}"
+      if ENCODEDECODE
+        if message.length != 0
+          decoded = decode_substitution_cipher(message)
+          send "#{return_str}:#{decoded}"
+        else
+          send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
+        end
       else
-        send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
+        send "#{return_str}:#{data[0]}: encode/decode module disabled"
       end
     # Encode message
     when /^!encode(.*)$/i
       message = $1.strip
-      if message.length != 0
-        encoded = encodedecode(message,0)
-        send "#{return_str}:#{encoded}"
+      if ENCODEDECODE
+        if message.length != 0
+          encoded = encode_substitution_cipher(message)
+          send "#{return_str}:#{encoded}"
+        else
+          send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
+        end
       else
-        send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
+        send "#{return_str}:#{data[0]}: encode/decode module disabled"
       end
     # Add notificaion
     when /^!notify(.*)$/i

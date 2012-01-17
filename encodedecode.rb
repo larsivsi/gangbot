@@ -95,12 +95,3 @@ def decode_substitution_cipher(input)
 
   return output
 end
-
-args = ARGV
-if args.length != 2
-  STDOUT.puts "too many/too few args"
-elsif args[0] == '0'
-  STDOUT.puts encode_substitution_cipher(args[1])
-else
-  STDOUT.puts decode_substitution_cipher(args[1])
-end
