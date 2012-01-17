@@ -1,10 +1,10 @@
 #!/usr/bin/ruby
 
 # Use local config if it exists
-if File::exists?('gangbot.config.local.rb')
-	require 'gangbot.config.local'
+if File::exists?('./gangbot.config.local.rb')
+	require './gangbot.config.local'
 else
-	require 'gangbot.config'
+	require './gangbot.config'
 end
 require 'rubygems'
 require 'socket'

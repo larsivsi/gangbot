@@ -8,7 +8,7 @@ else
 end
 # Check for encode/decode
 if File::exists?('./encodedecode.rb')
-  require './encodedecode.rb'
+  require './encodedecode'
   ENCODEDECODE = true
 else
   ENCODEDECODE = false
