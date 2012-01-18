@@ -101,12 +101,13 @@ def encode_row_transposition_cipher(input)
   output = ""
 
   # create 2d array
-  columns = Math.sqrt(input.length).ceil
+
+  columns = Math.sqrt(plaintext.length).ceil
   array = []
   columns.times { array << Array.new(columns) }
 
   # fill array
-  for i in 0..input.length-1
+  for i in 0..plaintext.length-1
     array[(i/columns).to_i][i%columns] = plaintext[i]
   end
 
@@ -114,21 +115,21 @@ def encode_row_transposition_cipher(input)
   break_char = 0
 
   # if we have to pad the array
-  if input.length != columns*columns
+  if plaintext.length != columns*columns
     use_break_char = 1
 
     # find break character that's not illegal
     begin
       break_char = 33+rand(710)
-    end while plaintext.include?(break_char) or (127..160).cover?(break_char)
+    end while plaintext.include?(break_char) or (127..160).include?(break_char)
 
-    array[(input.length/columns).to_i][input.length%columns] = break_char
+    array[(plaintext.length/columns).to_i][plaintext.length%columns] = break_char
 
     # fill the rest of the array with garbage
-    for i in input.length+1..columns*columns-1
+    for i in plaintext.length+1..columns*columns-1
       begin
         rand_char = 33+rand(710)
-      end while (127..160).cover?(rand_char)
+      end while (127..160).include?(rand_char)
       array[(i/columns).to_i][i%columns] = rand_char
     end
   end
@@ -202,15 +203,3 @@ def decode_row_transposition_cipher(input)
 
   return output
 end
-
-# for testing
-#testtext = "hei hopp, dette er en fin og lang testtext!! hurra for meh!"
-#puts testtext
-#enc_sub = encode_substitution_cipher(testtext)
-#puts enc_sub
-#enc = encode_row_transposition_cipher(enc_sub)
-#puts enc
-#dec_row = decode_row_transposition_cipher(enc)
-#puts dec_row
-#dec = decode_substitution_cipher(dec_row)
-#puts dec
