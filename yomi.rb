@@ -156,7 +156,7 @@ class IRC
       message = $1.strip
       if ENCODEDECODE
         if message.length != 0
-          decoded = decode_substitution_cipher(message)
+          decoded = decode_classic_cipher(message)
           send "#{return_str}:#{decoded}"
         else
           send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
@@ -169,7 +169,7 @@ class IRC
       message = $1.strip
       if ENCODEDECODE
         if message.length != 0
-          encoded = encode_substitution_cipher(message)
+          encoded = encode_classic_cipher(message)
           send "#{return_str}:#{encoded}"
         else
           send "#{return_str}:#{data[0]}, invalid input: check !help for guidence"
