@@ -64,6 +64,7 @@ def encode_substitution_cipher(input)
   return output
 end
 
+# Decode substitution cipher
 def decode_substitution_cipher(input)
   input = input.split(" ")
   ciphertext = input[0].unpack('U'*input[0].length)
@@ -96,6 +97,7 @@ def decode_substitution_cipher(input)
   return output
 end
 
+# Regular row transposition, hardcoded to only work with inputs containing one space (from substitution cipher)
 def encode_row_transposition_cipher(input)
   plaintext = input.unpack('U'*input.length)
   output = ""
@@ -160,6 +162,7 @@ def encode_row_transposition_cipher(input)
   return output
 end
 
+# Decode row transposition, hardcoded only to work with input containing two spaces (from encode row)
 def decode_row_transposition_cipher(input)
   input = input.split(" ")
   ciphertext = input[0].unpack('U'*input[0].length)
@@ -202,4 +205,14 @@ def decode_row_transposition_cipher(input)
   end
 
   return output
+end
+
+# Classic product cipher
+def encode_classic_cipher(input)
+  return encode_row_transposition_cipher(encode_substitution_cipher(input))
+end
+
+# Decode classic product cipher
+def decode_classic_cipher(input)
+  return decode_substitution_cipher(decode_row_transposition_cipher(input))
 end
