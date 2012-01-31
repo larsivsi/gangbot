@@ -28,7 +28,9 @@ class IRC
     @startTime = Time.new
     @old = {}
     @users = {}
-    sync_with_db()
+    if ENABLE_DB_LOGGING
+      sync_with_db()
+    end
     # Just make a random user agent
     @user_agent = 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.12) Gecko/20101027 Firefox/3.6.12'
   end
@@ -49,22 +51,30 @@ class IRC
 
   # Connect to log DB...
   def log_db_connect()
-    return DBI.connect(LOG_DB, LOG_DB_USER, LOG_DB_PW)
+    if not ENABLE_DB_LOGGING
+      return false
+    else
+      return DBI.connect(LOG_DB, LOG_DB_USER, LOG_DB_PW)
+    end
   end
 
   # Add another link to the old DB
   def add_old_to_db(link, nick_id)
-    dbh = log_db_connect()
-    dbh.do("INSERT INTO links(nick_id, link, created_at, times_posted) VALUES (?,?,NOW(),1);",nick_id,link)
-    dbh.disconnect if dbh
+    if ENABLE_DB_LOGGING
+      dbh = log_db_connect()
+      dbh.do("INSERT INTO links(nick_id, link, created_at, times_posted) VALUES (?,?,NOW(),1);",nick_id,link)
+      dbh.disconnect if dbh
+    end
   end
 
   # Increment times posted
   def update_old_db_counter(link)
-    dbh = log_db_connect()
-    dbh.do("UPDATE links SET times_posted = times_posted+1 WHERE link = ?",link)
-    dbh.disconnect if dbh
-    @old[link][2] = @old[link][2]+1
+    if ENABLE_DB_LOGGING
+      dbh = log_db_connect()
+      dbh.do("UPDATE links SET times_posted = times_posted+1 WHERE link = ?",link)
+      dbh.disconnect if dbh
+      @old[link][2] = @old[link][2]+1
+    end
   end
 
   # Check whether a link is old or not, add to DB if new
@@ -202,7 +212,8 @@ class IRC
   end
 
   # Get titles for links posted
-  def get_title_for_html(url)
+  def get_title_for_html(url, limit)
+		return "Too many redirects. Click on your own risk" if limit == 0
     session = Net::HTTP.new(url.host, url.port)
     session.use_ssl = true if url.port == 443
     session.open_timeout = 3
@@ -226,37 +237,44 @@ class IRC
         return "Request timed out :("
       end
     end
-    if resp.content_type =~ /text\/html/i
-      page = nil
-      ret = 0
-      # get body
-      begin
-        if url.path.empty?
-          page = session.get('/')
-        else
-          path = url.path + (url.query == nil ? "" : "?#{url.query}")
-          page = session.get(path)
+    case resp
+    when Net::HTTPRedirection then
+      location = URI.parse(resp['location'])
+      puts "3xx response found, redirected to #{location}"
+      get_title_for_html(location, limit - 1)
+    when Net::HTTPSuccess then 
+      if resp.content_type =~ /text\/html/i
+        page = nil
+        ret = 0
+        # get body
+        begin
+          if url.path.empty?
+            page = session.get('/')
+          else
+            path = url.path + (url.query == nil ? "" : "?#{url.query}")
+            page = session.get(path)
+          end
+        rescue Timeout::Error
+          puts "RESCUED TIMEOUT"
+          if ret < 3
+            ret += 1
+            retry
+          else
+            return "Request timed out :("
+          end
         end
-      rescue Timeout::Error
-        puts "RESCUED TIMEOUT"
-        if ret < 3
-          ret += 1
-          retry
-        else
-          return "Request timed out :("
+        if page.body =~ /<title>([^<]+)<\/title>/i
+          title = $1.gsub(/\n/,'')
+          title = title.strip
+          title = title.gsub(/\s+/,' ')
+          return HTMLEntities.new.decode(title)
         end
+        # no title
+        return "I'm so sorry, there seems like the developer was stupid; No title found"
       end
-      if page.body =~ /<title>([^<]+)<\/title>/i
-        title = $1.gsub(/\n/,'')
-        title = title.strip
-        title = title.gsub(/\s+/,' ')
-        return HTMLEntities.new.decode(title)
-      end
-      # no title
-      return nil
+      # not text/html
+      return "I was unable to get the title because of unvalid content. Not text/html"
     end
-    # not text/html
-    return nil
   end
 
   # Check that the URL is valid. Don't really trust this library...
@@ -387,18 +405,20 @@ class IRC
       message = $5
       words = message.strip.split(/\s+/).size
       dbh = log_db_connect()
-      if @users[nick] == nil
-        dbh.do("INSERT INTO nicks(nick,name,created_at,updated_at,words) VALUES (?,'',NOW(),NOW(),?);",nick,words)
-        query = dbh.prepare("SELECT id FROM nicks WHERE nick=?;")
-        query.execute(nick)
-        while row = query.fetch() do
-          @users[nick] = row[0]
+      if dbh
+        if @users[nick] == nil
+          dbh.do("INSERT INTO nicks(nick,name,created_at,updated_at,words) VALUES (?,'',NOW(),NOW(),?);",nick,words)
+          query = dbh.prepare("SELECT id FROM nicks WHERE nick=?;")
+          query.execute(nick)
+          while row = query.fetch() do
+            @users[nick] = row[0]
+          end
+        else
+          dbh.do("UPDATE nicks SET updated_at=NOW(), words=words+? WHERE nick=?",words,nick)
         end
-      else
-        dbh.do("UPDATE nicks SET updated_at=NOW(), words=words+? WHERE nick=?",words,nick)
+        dbh.do("INSERT INTO logs(nick_id,text,created_at) VALUES (?,?,NOW());",@users[nick],message)
+        dbh.disconnect
       end
-      dbh.do("INSERT INTO logs(nick_id,text,created_at) VALUES (?,?,NOW());",@users[nick],message)
-      dbh.disconnect if dbh
     end
     return [nick,channel,message]
   end
@@ -577,7 +597,7 @@ class IRC
         if is_valid_url(url_str)
           check_for_old(url_str, data[0], data[1])
           url = URI.parse(url_str)
-          if (title = get_title_for_html(url)) != nil
+          if (title = get_title_for_html(url, MAX_REDIRECTS)) != nil
             send "#{return_str}:>> #{title}"
           end
         end
@@ -587,7 +607,7 @@ class IRC
         if is_valid_url(url_str)
           check_for_old(url_str, data[0], data[1])
           url = URI.parse(url_str)
-          if (title = get_title_for_html(url)) != nil
+          if (title = get_title_for_html(url, MAX_REDIRECTS)) != nil
             send"#{return_str}:>> #{title}"
           end
         end

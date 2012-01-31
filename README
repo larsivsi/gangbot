@@ -1,0 +1,12 @@
+IRC-bot implemented in Ruby. 
+
+1) cp gangbot-config.rb gangbot-config-local.rb
+2) Make appropriate changes in the config
+ -> Choose dbi-adapter, database etc. (Or leave this as-is by having ENABLE_DB_LOGGING to false)
+3) Run ./kagura
+
+Dependencies:
+ruby
+rubygems
+libhtmlentities-ruby
+libdbi-ruby
