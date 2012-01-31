@@ -180,8 +180,8 @@ class IRC
     series = series.gsub(' ','%20');
     url = URI.parse("http://services.tvrage.com/tools/quickinfo.php?show\=#{series}")
     session = Net::HTTP.new(url.host, url.port)
-    session.open_timeout = 4
-    session.read_timeout = 4
+    session.open_timeout = 5
+    session.read_timeout = 5
     resp = nil
     begin
       resp = session.get("#{url.path}?#{url.query}")
@@ -213,7 +213,7 @@ class IRC
 
   # Get titles for links posted
   def get_title_for_html(url, limit)
-		return "Too many redirects. Click on your own risk" if limit == 0
+    return "Too many redirects. Click on your own risk" if limit == 0
     session = Net::HTTP.new(url.host, url.port)
     session.use_ssl = true if url.port == 443
     session.open_timeout = 3
@@ -273,7 +273,7 @@ class IRC
         return "I'm so sorry, there seems like the developer was stupid; No title found"
       end
       # not text/html
-      return "I was unable to get the title because of unvalid content. Not text/html"
+      return nil
     end
   end
 
