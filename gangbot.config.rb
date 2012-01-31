@@ -15,6 +15,7 @@ MAIN_BOT_NAME = 'nick'
 SECONDARY_BOT_NAME = 'nick'
 
 # Log DB
+ENABLE_DB_LOGGING = false
 LOG_DB = 'dbi:adapter:db:host'
 LOG_DB_USER = 'user'
 LOG_DB_PW = 'password'
@@ -27,3 +28,4 @@ MOVIE_DB_PW = 'password'
 # Links
 HALP_LINK = 'link'
 STATS_LINK = 'link'
+MAX_REDIRECTS = 10
