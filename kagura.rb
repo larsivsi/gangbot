@@ -29,7 +29,7 @@ class IRC
     @old = {}
     @users = {}
     if ENABLE_DB_LOGGING
-	sync_with_db()
+      sync_with_db()
     end
     # Just make a random user agent
     @user_agent = 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.12) Gecko/20101027 Firefox/3.6.12'
