@@ -194,7 +194,7 @@ def decode_row_transposition_cipher(input)
     end
   end
 
-  for i in 0..columns*columns
+  for i in 0..columns*columns-1
     num = array[(i/columns).to_i][i%columns]
     if num == break_char
       break
