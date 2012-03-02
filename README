@@ -1,4 +1,5 @@
 IRC-bot implemented in Ruby. 
+Will be compliant to whatever ruby version is in the debian repositories (currently 1.8.x)
 
 1) cp gangbot-config.rb gangbot-config-local.rb
 2) Make appropriate changes in the config
