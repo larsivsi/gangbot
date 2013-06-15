@@ -1,13 +1,13 @@
 IRC-bot implemented in Ruby. 
-Will be compliant to whatever ruby version is in the debian repositories (currently 1.8.x)
+Will be compliant to whatever ruby version is in the debian repositories (currently 1.9.1)
 
-1) cp gangbot-config.rb gangbot-config-local.rb
+1) cp gangbot.config.rb gangbot.config.local.rb
 2) Make appropriate changes in the config
  -> Choose dbi-adapter, database etc. (Or leave this as-is by having ENABLE_DB_LOGGING to false)
-3) Run ./kagura
+3) Run ./kagura for main bot
+4) Run ./yomi for secondry bot
 
 Dependencies:
 ruby
-rubygems
 libhtmlentities-ruby
 libdbi-ruby

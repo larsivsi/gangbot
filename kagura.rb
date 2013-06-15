@@ -6,13 +6,12 @@ if File::exists?('./gangbot.config.local.rb')
 else
 	require './gangbot.config'
 end
-require 'rubygems'
 require 'socket'
 require 'net/http'
 require 'net/https'
-require 'htmlentities' #gem
+require 'htmlentities'
 require 'rss'
-require 'dbi' #gem
+require 'dbi'
 require 'rexml/document'
 
 # The irc class, which talks to the server and holds the main event loop
